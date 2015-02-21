@@ -53,22 +53,22 @@ html(lang='en')
                     div.panel-collapse.collapse.in(id='#{collapseId}', role='tabpanel', aria-labelledby='#{headingId}')
                       .panel-body
                         each problem in problems.solved
-                            a(class="label label-success", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
+                            a(class="label label-success", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
                               | #{problem.name}
                             | #{space}
                         each problem in problems.unsolved
                           if problem.name == 'PROBLEM DIVIDER'
-                            hr
+                            hr(style="margin:4px")
                           else if problem.status == 0
-                            a(class="label label-danger", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
+                            a(class="label label-danger", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
                               | #{problem.name}
                             | #{space}
                           else if problem.status == 1
-                            a(class="label label-warning", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
+                            a(class="label label-warning", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
                               | #{problem.name}
                             | #{space}
                           else
-                            a(class="label label-default", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
+                            a(class="label label-default", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
                               | #{problem.name}
                             | #{space}
           hr
