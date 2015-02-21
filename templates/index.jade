@@ -1,0 +1,49 @@
+-var space = " "
+doctype html
+html(lang='en')
+  head
+    meta(charset='utf-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=edge')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    meta(name='description', content='')
+    meta(name='Nitin Jaglan', content='Codeforces data for #{user}')
+    link(rel='icon', href='../../favicon.ico')
+    title Codeforces data for #{user}
+    // Bootstrap core CSS
+    link(href='/css/bootstrap.min.css', rel='stylesheet')
+  body
+    // Begin page content
+    .container
+      .page-header
+        a(class="pull-right btn btn-primary" href="updatecontestdata")
+          span(class="glyphicon glyphicon-refresh" aria-hidden="true")
+          |   Update contest information
+        h1 Codeforces data
+
+      div#newhandleform(class="collapse")
+        form(class="form-horizontal" action="/addhandle")
+          div.form-group
+            label(for="handle", class="col-sm-2 control-label")
+              | Handle
+            div.col-sm-10
+              input(type="text" class="form-control" name="handle" id="handle" placeholder="Valid codeforces handle")
+          div.form-group
+            div(class="col-sm-offset-2 col-sm-10")
+              button(type="submit" class="btn btn-default")
+                | Add handle
+
+      form(type="get", )
+      a(class="pull-right btn btn-primary" data-toggle="collapse" href="#newhandleform")
+        span(class="glyphicon glyphicon-plus" aria-hidden="true")
+        |   Add handle
+
+      h3 Hello :)
+      each profile in profiles
+        a(class="btn btn-primary", href="profiles/#{profile}") #{profile}
+        | #{space}
+    footer.footer
+      .container
+        p.text-muted Made using node.js(jsdom,request,jade)
+    script(src="http://code.jquery.com/jquery.js")
+    script(src='/js/bootstrap.min.js')
+    script(src='/js/codeforces.js')

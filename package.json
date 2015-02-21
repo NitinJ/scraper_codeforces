@@ -1,0 +1,26 @@
+{
+  "name": "scrapper_codeforces",
+  "version": "1.0.0",
+  "description": "Scrapper utility for codeforces",
+  "main": "app.js",
+  "dependencies": {
+    "colors": "^1.0.3",
+    "express": "^4.11.2",
+    "jade": "^1.9.1",
+    "jsdom": "^3.1.0",
+    "request": "^2.51.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Scrapper",
+    "codeforces",
+    "data",
+    "profile",
+    "divisions"
+  ],
+  "author": "Nitin jaglan",
+  "license": "MIT"
+}

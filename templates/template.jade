@@ -1,0 +1,114 @@
+-var space = " "
+doctype html
+html(lang='en')
+  head
+    meta(charset='utf-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=edge')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    meta(name='description', content='')
+    meta(name='Nitin Jaglan', content='Codeforces data for #{user}')
+    link(rel='icon', href='../../favicon.ico')
+    title Codeforces data for #{user}
+    // Bootstrap core CSS
+    link(href='/css/bootstrap.min.css', rel='stylesheet')
+  body
+    // Begin page content
+    .container
+      .page-header
+        if typeof(user) !== 'undefined'
+          a(class="pull-right btn btn-primary" href="/")
+              span(class="glyphicon glyphicon-home" aria-hidden="true")
+              |   Home
+          h1 Codeforces data : #{user}
+          h4(class="hide", id="ts") #{ts}
+          .div(class="btn-group pull-right", role="group")
+            a(type="button" class="btn btn-primary" href="/refreshstats/#{handle}")
+              span(class="glyphicon glyphicon-refresh" aria-hidden="true")
+              |   Refresh stats
+            a(type="button" class="btn btn-primary" href="/removehandle/#{handle}")
+              span(class="glyphicon glyphicon-minus" aria-hidden="true")
+              |   Remove handle
+
+          h4(class="hide", id="profile_ts") #{profile_ts}
+        else
+          h1 No data available
+      if typeof(user) !== 'undefined'
+          .division#div2
+            p.lead
+              Use
+                Pin DIV2
+            .division-content
+              #accordion1.panel-group(role='tablist', aria-multiselectable='false')
+                each problems, problem_code in div2
+                  - var headingId = problem_code + 2;
+                  - var collapseId = problem_code + '-content-' + 2;
+                  .panel.panel-default
+                    div.panel-heading(id='#{headingId}', role='tab')
+                      h4.panel-title
+                        button(class="btn btn-primary", data-toggle='collapse', href='##{collapseId}', aria-expanded='true', aria-controls='#{collapseId}')
+                          | #{problem_code} &nbsp;
+                          span.label.label-success #{problems.solved.length}
+                          | #{space}
+                          span.label.label-default #{problems.solved.length+problems.unsolved.length}
+                    div.panel-collapse.collapse.in(id='#{collapseId}', role='tabpanel', aria-labelledby='#{headingId}')
+                      .panel-body
+                        each problem in problems.solved
+                            a(class="label label-success", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
+                              | #{problem.name}
+                            | #{space}
+                        each problem in problems.unsolved
+                          if problem.name == 'PROBLEM DIVIDER'
+                            hr
+                          else if problem.status == 0
+                            a(class="label label-danger", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
+                              | #{problem.name}
+                            | #{space}
+                          else if problem.status == 1
+                            a(class="label label-warning", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
+                              | #{problem.name}
+                            | #{space}
+                          else
+                            a(class="label label-default", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
+                              | #{problem.name}
+                            | #{space}
+          hr
+          .division#div1
+          p.lead
+            Use
+              Pin DIV1
+          .division-content
+            #accordion2.panel-group(role='tablist', aria-multiselectable='true')
+              each problems, problem_code in div1
+                - var headingId = problem_code + 1;
+                - var collapseId = problem_code + '-content-' + 1;
+                .panel.panel-default
+                  div.panel-heading(id='#{headingId}', role='tab')
+                    h4.panel-title
+                      button(class="btn btn-primary", data-toggle='collapse', href='##{collapseId}', aria-expanded='true', aria-controls='#{collapseId}')
+                        | #{problem_code} &nbsp;
+                        span.label.label-success #{problems.solved.length}
+                        | #{space}
+                        span.label.label-default #{problems.solved.length+problems.unsolved.length}
+                  div.panel-collapse.collapse.in(id='#{collapseId}', role='tabpanel', aria-labelledby='#{headingId}')
+                    .panel-body
+                      each problem in problems.solved
+                        a(class="label label-success", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
+                          | #{problem.name}
+                        | #{space}
+                      each problem in problems.unsolved
+                        if problem.name == 'PROBLEM DIVIDER'
+                          a(class="label label-primary", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
+                            | #{problem.name}
+                          | #{space}
+                        else
+                          a(class="label label-default", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
+                            | #{problem.name}
+                          | #{space}
+      else
+        h1 No data available
+    footer.footer
+      .container
+        p.text-muted Made using node.js(jsdom,request,jade)
+    script(src="http://code.jquery.com/jquery.js")
+    script(src='/js/bootstrap.min.js')
+    script(src='/js/codeforces.js')
