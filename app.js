@@ -70,7 +70,7 @@ var generateTemplateData = function (handle, profileData, data) {
                 if(!divider.div2.hasOwnProperty(code)) {
                     divider.div2[code] = 0;
                 }
-                if(parseInt(contest.round) < 247) {
+                if(parseInt(contest.round) < 257) {
                     divider.div2[code] = Math.max(divider.div2[code], parseInt(contest.round));
                 }
                 if(problem.solved == 3) {
@@ -97,7 +97,7 @@ var generateTemplateData = function (handle, profileData, data) {
                 if(!divider.div1.hasOwnProperty(code)) {
                     divider.div1[code] = 0;
                 }
-                if(parseInt(contest.round) < 247) {
+                if(parseInt(contest.round) < 257) {
                     divider.div1[code] = Math.max(divider.div1[code], parseInt(contest.round));
                 }
                 if(problem.solved == 3) {

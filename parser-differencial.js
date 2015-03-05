@@ -176,7 +176,7 @@ var writeToFile = function (fileName, newData) {
 }
 
 // Runner
-var total = PAGES.length;
+var total = 1;
 var output = [];
 var lastContest = 0;
 var newLastContest = 0;
@@ -188,17 +188,17 @@ fs.readFile(DIFFERENCIAL_FILE, function(error, data){
     lastContest = parseInt(data);
     newLastContest = lastContest;
     console.log("Last known contest = ", lastContest);
-    for(var i=0;i<PAGES.length;i++) {
-        (function(i) {
-            getContestsOnPage(PAGES[i], function (data) {
-                total--;
-                output = output.concat(data);
-                console.log( ("Got "+data.length+" contests from page "+(i+1)).yellow );
-                if(!total) {
-                    console.log("Got data for all pages", output);
-                    writeToFile(OUTPUT_FILE, {ts:Math.floor(new Date()/1000), output:output});
-                }
-            });
-        })(i);
-    }
+    var i=0;
+    (function(i) {
+        getContestsOnPage(PAGES[i], function (data) {
+            total--;
+            output = output.concat(data);
+            console.log("total = ", total);
+            console.log( ("Got "+data.length+" contests from page "+(i+1)).yellow );
+            if(!total) {
+                console.log("Got data for all pages".green, output);
+                writeToFile(OUTPUT_FILE, {ts:Math.floor(new Date()/1000), output:output});
+            }
+        });
+    })(i);
 });

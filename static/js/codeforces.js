@@ -15,8 +15,18 @@ var getTimeDiff = function (seconds){
 }
 $(document).ready(function(){
     $(function () {
-        var ts = Math.round(Date.now() / 1000);
-        $("#ts").html("Contest data last updated : " + getTimeDiff(ts - parseInt($("#ts").html()))).removeClass("hide");
-        $("#profile_ts").html("Profile data last updated : " + getTimeDiff(ts - parseInt($("#profile_ts").html()))).removeClass("hide");
-    })
+        var ts_initial = parseInt($("#ts").html());
+        var profile_ts_initial = parseInt($("#profile_ts").html());
+        $("#ts").html("Contest data last updated : " + getTimeDiff(Math.round(Date.now() / 1000) - ts_initial)).removeClass("hide");
+        $("#profile_ts").html("Profile data last updated : " + getTimeDiff(Math.round(Date.now() / 1000) - profile_ts_initial)).removeClass("hide");
+        var invFunction = function(){
+            var ts = Math.round(Date.now() / 1000);
+            $("#ts").html("Contest data last updated : " + getTimeDiff(ts - ts_initial)).removeClass("hide");
+            $("#profile_ts").html("Profile data last updated : " + getTimeDiff(ts - profile_ts_initial)).removeClass("hide");
+        }
+        var intervalVar = setInterval(invFunction, 60*1000);
+    });
+    $(function () {
+      $('[data-toggle="popover"]').popover();
+    });
 });
