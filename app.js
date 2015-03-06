@@ -9,7 +9,7 @@ app.use(express.static(__dirname + '/static'));
 var CODEFORCES_JSON_DATA_FILE = __dirname + "/data/2codeforces_data_5.json";
 var STATS_DIR = __dirname + "/profiles/";
 
-var generateTemplateData = function (handle, profileData, data) {
+var generateTemplateData = function (handle, profileData, starData, data) {
     var current_ts = Math.floor(new Date() / 1000);
     var total_ts = data.ts;
     var profile_ts = profileData.ts;
@@ -27,13 +27,13 @@ var generateTemplateData = function (handle, profileData, data) {
             successFullsubmissions[profileData[i].problem.name] |= 1;
         }
     }
-    // console.log(successFullsubmissions);
     var templateData = {
         ts: total_ts,
         profile_ts: profile_ts,
         user : handle,
         div1 : {},
-        div2 : {}
+        div2 : {},
+        tags: {}
     }
     var divider = {div1: {}, div2: {}};
     for(var i = 0;i < data.length;i++) {
@@ -58,9 +58,11 @@ var generateTemplateData = function (handle, profileData, data) {
                 contest['problems'][j].solved = 2;
             }
             var problem = contest['problems'][j];
-            // console.log(problem.solved);
+            // console.log(problem.tags);
             var problemName = contestName+"_"+problem.code;
             var code = problem.code;
+            problem.star = starData.hasOwnProperty(problem.name);
+            // console.log(problem.star);
             if(['A','B','C','D','E'].indexOf(code) < 0)
                 code = 'O';
             if(contest.div == 2) {
@@ -74,20 +76,30 @@ var generateTemplateData = function (handle, profileData, data) {
                     divider.div2[code] = Math.max(divider.div2[code], parseInt(contest.round));
                 }
                 if(problem.solved == 3) {
+                    for(t in problem.tags){
+                        templateData.tags[problem.tags[t]] = 1;
+                    }
                     templateData.div2[code].solved.push({
                         round: contest.round,
                         code: problemName,
                         name: problem.name,
                         link: problem.link,
-                        status: problem.solved
+                        status: problem.solved,
+                        tags: problem.tags,
+                        star: problem.star
                     });
                 } else {
+                    for(t in problem.tags){
+                        templateData.tags[problem.tags[t]] = 1;
+                    }
                     templateData.div2[code].unsolved.push({
                         round: contest.round,
                         code: problemName,
                         name: problem.name,
                         link: problem.link,
-                        status: problem.solved
+                        status: problem.solved,
+                        tags: problem.tags,
+                        star: problem.star
                     });
                 }
             } else {
@@ -101,20 +113,30 @@ var generateTemplateData = function (handle, profileData, data) {
                     divider.div1[code] = Math.max(divider.div1[code], parseInt(contest.round));
                 }
                 if(problem.solved == 3) {
+                    for(t in problem.tags){
+                        templateData.tags[problem.tags[t]] = 1;
+                    }
                     templateData.div1[code].solved.push({
                         round: contest.round,
                         code: problemName,
                         name: problem.name,
                         link: problem.link,
-                        status: problem.solved
+                        status: problem.solved,
+                        tags: problem.tags,
+                        star: problem.star
                     });
                 } else {
+                    for(t in problem.tags){
+                        templateData.tags[problem.tags[t]] = 1;
+                    }
                     templateData.div1[code].unsolved.push({
                         round: contest.round,
                         code: problemName,
                         name: problem.name,
                         link: problem.link,
-                        status: problem.solved
+                        status: problem.solved,
+                        tags: problem.tags,
+                        star: problem.star
                     });
                 }
             }
@@ -139,7 +161,8 @@ var generateTemplateData = function (handle, profileData, data) {
             round: divider.div1[p],
             code: "PRACTICE",
             name: "PROBLEM DIVIDER",
-            link: "http://www.codeforces.com"
+            link: "http://www.codeforces.com",
+            tags: []
         });
         templateData.div1[p].unsolved.sort(function(a,b){
             return -parseInt(a.round) + parseInt(b.round);
@@ -148,14 +171,15 @@ var generateTemplateData = function (handle, profileData, data) {
             return -parseInt(a.round) + parseInt(b.round);
         });
     }
+    // console.log("data = ", templateData.tags);
     return templateData;
 }
-var getTotalData = function (codeforcesDataJsonFilePath, handle, profileData, callback){
+var getTotalData = function (codeforcesDataJsonFilePath, handle, profileData, starData, callback){
     fs.readFile(codeforcesDataJsonFilePath, 'utf8', function (err, data) {
         if(err){
             throw err;
         } else {
-            callback(generateTemplateData(handle, profileData, JSON.parse(data)));
+            callback(generateTemplateData(handle, profileData, starData, JSON.parse(data)));
         }
     });
 }
@@ -190,15 +214,42 @@ app.get('/removehandle/:handle', function (req, res) {
     res.redirect("/");
 });
 
+app.get('/starmark/:handle/:pname', function (req, res) {
+    var handle = req.params.handle;
+    var pname = req.params.pname;
+    console.log(handle);
+    console.log(pname);
+    if (!fs.existsSync(__dirname + "/profiles/"+handle+"_star.star")) {
+        fs.writeFileSync(__dirname + "/profiles/"+handle+"_star.star", JSON.stringify({}));
+    }
+    fs.readFile(__dirname + "/profiles/"+handle+"_star.star", 'utf8', function (err, data) {
+        var stardata = JSON.parse(data);
+        if(err) {
+        } else {
+            if(stardata.hasOwnProperty(pname)) {
+                delete stardata[pname];
+            } else {
+                stardata[pname] = 1;
+            }
+            fs.writeFile(__dirname + "/profiles/"+handle+"_star.star", JSON.stringify(stardata), function(err) {});
+        }
+    });
+    res.json({'status':1});
+});
+
 app.get('/profiles/:id', function (req, res) {
     console.log("handle requested = ", req.params.id);
     var handle = req.params.id;
+    if (!fs.existsSync(__dirname + "/profiles/"+handle+"_star.star")) {
+        fs.writeFileSync(__dirname + "/profiles/"+handle+"_star.star", JSON.stringify({}));
+    }
+    var starData = JSON.parse(fs.readFileSync(__dirname + '/profiles/' + handle + "_star.star", 'utf8'));
     fs.readFile(__dirname + '/profiles/' + handle + ".json", 'utf8', function (err, data) {
         var profileData = JSON.parse(data);
         if(err) {
             res.render('template.jade', {});
         } else {
-            getTotalData(CODEFORCES_JSON_DATA_FILE, handle, profileData, function (data) {
+            getTotalData(CODEFORCES_JSON_DATA_FILE, handle, profileData, starData, function (data) {
                 data['handle'] = handle;
                 res.render('template.jade', data);
             });
@@ -210,7 +261,9 @@ app.get('/', function (req, res) {
     fs.readdir(__dirname + '/profiles', function (err, files) {
         var profiles = [];
         for (var i = files.length - 1; i >= 0; i--) {
-            profiles.push(files[i].replace(/.json/g, ''));
+            var f = files[i].lastIndexOf('.json');
+            if(f > 0 && f+5 == files[i].length)
+                profiles.push(files[i].replace(/.json/g, ''));
         };
         res.render('index.jade', {profiles: profiles});
     });
@@ -221,3 +274,7 @@ var server = app.listen(3000, function () {
     var port = server.address().port
     console.log('Example app listening at http://%s:%s', host, port)
 });
+
+
+// nitin.json
+// 0123456789

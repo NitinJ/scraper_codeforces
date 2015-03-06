@@ -1,4 +1,5 @@
 -var space = " "
+- function randomid() { if(randomid.id == undefined) randomid.id = 0; randomid.id++; return randomid.id;}
 doctype html
 html(lang='en')
   head
@@ -11,104 +12,232 @@ html(lang='en')
     title Codeforces data for #{user}
     // Bootstrap core CSS
     link(href='/css/bootstrap.min.css', rel='stylesheet')
+    link(href='/css/awesome-bootstrap-checkbox.css', rel='stylesheet')
   body
+    nav.navbar.navbar-default.navbar-static-top
+      .container
+        .navbar-header
+          button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#navbar', aria-expanded='false', aria-controls='navbar')
+            span.sr-only Toggle navigation
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+          a.navbar-brand(href='#') Codeforces Data
+        #navbar.navbar-collapse.collapse
+          ul.nav.navbar-nav
+            li
+              a(href="/")
+                span(class="glyphicon glyphicon-home" aria-hidden="true")
+                |   Home
+            li
+              a(href="/refreshstats/#{handle}")
+                span(class="glyphicon glyphicon-refresh" aria-hidden="true")
+                |   Refresh profile information
+            li
+              a(href="/updatecontestdata")
+                span(class="glyphicon glyphicon-refresh" aria-hidden="true")
+                |   Refresh contest information
+          ul.nav.navbar-nav.navbar-right
+            li.dropdown.active.categories-menu
+              a.dropdown-toggle.pull-right(href='#', data-toggle='dropdown', role='button', aria-expanded='false')
+                | Options
+                span.caret
+              ul.dropdown-menu(role='menu', style="min-width:450px;padding-bottom:10px")
+                li
+                  a(href='/removehandle/#{handle}')
+                    span(class="glyphicon glyphicon-remove" aria-hidden="true" style="margin-right:10px")
+                    |   Remove handle
+                li.divider
+                li
+                  div.row
+                    div.col-sm-5
+                      ul(style="list-style:none")
+                        li.dropdown-header Categories
+                        li
+                          div.checkbox.checkbox-warning.checkbox-inline
+                            input(id="starred", type="checkbox", checked="checked")
+                            label(for="starred")
+                              | Starred
+                        li
+                          div.checkbox.checkbox-success.checkbox-inline
+                            input(id="solved", type="checkbox", checked="checked")
+                            label(for="solved")
+                              | Solved
+                        li
+                          div.checkbox.checkbox-inline
+                            - var rid = randomid()
+                            input(id="unsolved", type="checkbox", checked="checked")
+                            label(for="unsolved")
+                              | Unsolved
+                        li
+                          div.checkbox.checkbox-danger.checkbox-inline
+                            - var rid = randomid()
+                            input(id="wronganswer", type="checkbox", checked="checked")
+                            label(for="wronganswer")
+                              | Wrong Answer
+                        li
+                          div.checkbox.checkbox-warning.checkbox-inline
+                            - var rid = randomid()
+                            input(id="tle", type="checkbox", checked="checked")
+                            label(for="tle")
+                              | TLE
+                    div.col-sm-7
+                      button.btn.btn-sm#checkall
+                        |  Check All
+                      button.btn.btn-sm#uncheckall
+                        |  Uncheck All
+                      ul(style="list-style:none;padding-left:0px")
+                        li.dropdown-header Problem Categories
+                        each value,key in tags
+                          li
+                            div.checkbox.checkbox-inline
+                              - var rid = randomid()
+                              input.category(id="checkbox#{rid}", type="checkbox", checked="checked")
+                              label(for="checkbox#{rid}")
+                                |  #{key}
     // Begin page content
     .container
-      .page-header
+      .row
+        div
+          if typeof(user) !== 'undefined'
+            h1 #{user}
+            p(class="hide", id="ts") #{ts}
+            p(class="hide", id="profile_ts") #{profile_ts}
+          else
+            h1 No data available
+      .row
         if typeof(user) !== 'undefined'
-          a(class="pull-right btn btn-primary" href="/")
-              span(class="glyphicon glyphicon-home" aria-hidden="true")
-              |   Home
-          h1 Codeforces data : #{user}
-          h4(class="hide", id="ts") #{ts}
-          .div(class="btn-group pull-right", role="group")
-            a(type="button" class="btn btn-primary" href="/refreshstats/#{handle}")
-              span(class="glyphicon glyphicon-refresh" aria-hidden="true")
-              |   Refresh stats
-            a(type="button" class="btn btn-primary" href="/removehandle/#{handle}")
-              span(class="glyphicon glyphicon-minus" aria-hidden="true")
-              |   Remove handle
-
-          h4(class="hide", id="profile_ts") #{profile_ts}
+          .division#div2
+            .division-content
+                #accordion1.panel-group(role='tablist', aria-multiselectable='false')
+                  each problems, problem_code in div2
+                    - var headingId = problem_code + 2;
+                    - var collapseId = problem_code + '-content-' + 2;
+                    .panel.panel-default
+                      div.panel-heading(id='#{headingId}', role='tab', data-toggle='collapse', href='##{collapseId}', aria-expanded='true', aria-controls='#{collapseId}')
+                        h3.panel-title.pull-right
+                          span.label.label-primary
+                            | Div2
+                        h4.panel-title
+                          button(class="btn btn-primary")
+                            | #{problem_code} &nbsp;
+                            span.label.label-success #{problems.solved.length}
+                            | #{space}
+                            span.label.label-default #{problems.solved.length+problems.unsolved.length}
+                      div.panel-collapse.collapse.in(id='#{collapseId}', role='tabpanel', aria-labelledby='#{headingId}')
+                        .panel-body
+                          each problem in problems.solved
+                              -tags = ""
+                              -starclass = ""
+                              if problem.star
+                                -starclass = "problem-star"
+                              if problem.name != 'PROBLEM DIVIDER'
+                                each tag in problem.tags
+                                  -tags = tags + "," + tag
+                              a(class="label label-success problem problem-solved problem-result-ac #{starclass}", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", data-tags="#{tags}", title="#{problem.code}")
+                                if problem.star
+                                  i.glyphicon.glyphicon-star(style="color:gold;margin-right:2px")
+                                | #{problem.name}
+                              | #{space}
+                          br
+                          -flag = 0
+                          each problem in problems.unsolved
+                            -tags = ""
+                            -starclass = ""
+                            if problem.star
+                              -starclass = "problem-star"
+                            if problem.name != 'PROBLEM DIVIDER'
+                              each tag in problem.tags
+                                -tags = tags + "," + tag
+                            if problem.name == 'PROBLEM DIVIDER'
+                              hr(style="margin:4px")
+                              -flag = 1
+                            else if problem.status == 0
+                              a(class="label label-danger problem problem-unsolved problem-result-wa #{starclass}", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", data-tags="#{tags}", title="#{problem.code}")
+                                if problem.star
+                                  i.glyphicon.glyphicon-star(style="color:gold;margin-right:2px")
+                                | #{problem.name}
+                              | #{space}
+                            else if problem.status == 1
+                              a(class="label label-warning problem problem-unsolved problem-result-tle #{starclass}", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", data-tags="#{tags}", title="#{problem.code}")
+                                if problem.star
+                                  i.glyphicon.glyphicon-star(style="color:gold;margin-right:2px")
+                                | #{problem.name}
+                              | #{space}
+                            else
+                              a(class="label label-default problem problem-unsolved problem-result-other #{starclass}", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", data-tags="#{tags}", title="#{problem.code}")
+                                if problem.star
+                                  i.glyphicon.glyphicon-star(style="color:gold;margin-right:2px")
+                                | #{problem.name}
+                              | #{space}
         else
           h1 No data available
-      if typeof(user) !== 'undefined'
-          .division#div2
-            p.lead
-              Use
-                Pin DIV2
-            .division-content
-              #accordion1.panel-group(role='tablist', aria-multiselectable='false')
-                each problems, problem_code in div2
-                  - var headingId = problem_code + 2;
-                  - var collapseId = problem_code + '-content-' + 2;
-                  .panel.panel-default
-                    div.panel-heading(id='#{headingId}', role='tab')
-                      h4.panel-title
-                        button(class="btn btn-primary", data-toggle='collapse', href='##{collapseId}', aria-expanded='true', aria-controls='#{collapseId}')
-                          | #{problem_code} &nbsp;
-                          span.label.label-success #{problems.solved.length}
-                          | #{space}
-                          span.label.label-default #{problems.solved.length+problems.unsolved.length}
-                    div.panel-collapse.collapse.in(id='#{collapseId}', role='tabpanel', aria-labelledby='#{headingId}')
-                      .panel-body
-                        each problem in problems.solved
-                            a(class="label label-success", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
-                              | #{problem.name}
-                            | #{space}
-                        br
-                        -flag = 0
-                        each problem in problems.unsolved
-                          if problem.name == 'PROBLEM DIVIDER'
-                            hr(style="margin:4px")
-                            -flag = 1
-                          else if problem.status == 0
-                            a(class="label label-danger", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
-                              | #{problem.name}
-                            | #{space}
-                          else if problem.status == 1
-                            a(class="label label-warning", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
-                              | #{problem.name}
-                            | #{space}
-                          else
-                            a(class="label label-default", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
-                              | #{problem.name}
-                            | #{space}
-          hr
+        if typeof(user) !== 'undefined'
           .division#div1
-          p.lead
-            Use
-              Pin DIV1
-          .division-content
-            #accordion2.panel-group(role='tablist', aria-multiselectable='true')
-              each problems, problem_code in div1
-                - var headingId = problem_code + 1;
-                - var collapseId = problem_code + '-content-' + 1;
-                .panel.panel-default
-                  div.panel-heading(id='#{headingId}', role='tab')
-                    h4.panel-title
-                      button(class="btn btn-primary", data-toggle='collapse', href='##{collapseId}', aria-expanded='true', aria-controls='#{collapseId}')
-                        | #{problem_code} &nbsp;
-                        span.label.label-success #{problems.solved.length}
-                        | #{space}
-                        span.label.label-default #{problems.solved.length+problems.unsolved.length}
-                  div.panel-collapse.collapse.in(id='#{collapseId}', role='tabpanel', aria-labelledby='#{headingId}')
-                    .panel-body
-                      each problem in problems.solved
-                        a(class="label label-success", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
-                          | #{problem.name}
-                        | #{space}
-                      each problem in problems.unsolved
-                        if problem.name == 'PROBLEM DIVIDER'
-                          a(class="label label-primary", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
-                            | #{problem.name}
-                          | #{space}
-                        else
-                          a(class="label label-default", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", title="#{problem.code}")
-                            | #{problem.name}
-                          | #{space}
-      else
-        h1 No data available
+            .division-content
+                #accordion2.panel-group(role='tablist', aria-multiselectable='false')
+                  each problems, problem_code in div1
+                    - var headingId = problem_code + 1;
+                    - var collapseId = problem_code + '-content-' + 1;
+                    .panel.panel-default
+                      div.panel-heading(id='#{headingId}', role='tab', data-toggle='collapse', href='##{collapseId}', aria-expanded='true', aria-controls='#{collapseId}')
+                        h3.panel-title.pull-right
+                          span.label.label-danger
+                            | div1
+                        h4.panel-title
+                          button(class="btn btn-primary")
+                            | #{problem_code} &nbsp;
+                            span.label.label-success #{problems.solved.length}
+                            | #{space}
+                            span.label.label-default #{problems.solved.length+problems.unsolved.length}
+                      div.panel-collapse.collapse.in(id='#{collapseId}', role='tabpanel', aria-labelledby='#{headingId}')
+                        .panel-body
+                          each problem in problems.solved
+                              -tags = ""
+                              -starclass = ""
+                              if problem.star
+                                -starclass = "problem-star"
+                              if problem.name != 'PROBLEM DIVIDER'
+                                each tag in problem.tags
+                                  -tags = tags + "," + tag
+                              a(class="label label-success problem problem-solved problem-result-ac #{starclass}", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", data-tags="#{tags}", title="#{problem.code}")
+                                if problem.star
+                                  i.glyphicon.glyphicon-star(style="color:gold;margin-right:2px")
+                                | #{problem.name}
+                              | #{space}
+                          br
+                          -flag = 0
+                          each problem in problems.unsolved
+                            -tags = ""
+                            -starclass = ""
+                            if problem.star
+                              -starclass = "problem-star"
+                            if problem.name != 'PROBLEM DIVIDER'
+                              each tag in problem.tags
+                                -tags = tags + "," + tag
+                            if problem.name == 'PROBLEM DIVIDER'
+                              hr(style="margin:4px")
+                              -flag = 1
+                            else if problem.status == 0
+                              a(class="label label-danger problem problem-unsolved problem-result-wa #{starclass}", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", data-tags="#{tags}", title="#{problem.code}")
+                                if problem.star
+                                  i.glyphicon.glyphicon-star(style="color:gold;margin-right:2px")
+                                | #{problem.name}
+                              | #{space}
+                            else if problem.status == 1
+                              a(class="label label-warning problem problem-unsolved problem-result-tle #{starclass}", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", data-tags="#{tags}", title="#{problem.code}")
+                                if problem.star
+                                  i.glyphicon.glyphicon-star(style="color:gold;margin-right:2px")
+                                | #{problem.name}
+                              | #{space}
+                            else
+                              a(class="label label-default problem problem-unsolved problem-result-other #{starclass}", target="_blank", alt="#{problem.code}", href="#{problem.link}", data-toggle="tooltip", data-placement="top", data-tags="#{tags}", title="#{problem.code}")
+                                if problem.star
+                                  i.glyphicon.glyphicon-star(style="color:gold;margin-right:2px")
+                                | #{problem.name}
+                              | #{space}
+        else
+          h1 No data available
     footer.footer
       .container
         p.text-muted Made using node.js(jsdom,request,jade)
