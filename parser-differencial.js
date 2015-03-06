@@ -20,66 +20,57 @@ var getTextNodesIn = function ($, el) {
 };
 var totalContests = 0;
 var totalContestsRecieved = 0;
-var getContestProblems = function (contestUrl, callback) {
+var getContestProblems = function (contest, callback) {
+    var contestUrl = contest['link'];
     var contestProblems = [];
     if(getContestProblems.retries.hasOwnProperty(contestUrl)) {
         getContestProblems.retries[contestUrl]++;
     } else {
         getContestProblems.retries[contestUrl] = 0;
     }
-    jsdom.env(
-        contestUrl,
-        ["http://code.jquery.com/jquery.js"],
-        function(errors, window) {
-            if(!errors){
-                (function($){
-                    var problems = $(".problems tr:not(:first)");
-                    var p = 0;
-                    $.each(problems, function() {
-                        p++;
-                        var problem = {};
-                        problem['code'] = $(this).find("td a:first()");
-                        problem['link'] = "http://www.codeforces.com" + problem['code'].attr('href');
-                        problem['code'] = problem['code'].text().trim();
-                        problem['name'] = $(this).find("td a:nth(1)").text();
-                        problem['solved'] = false;
-                        // console.log(problem);
-                        contestProblems.push(problem);
-                        if(p == problems.length) {
-                            totalContestsRecieved++;
-                            console.log((totalContestsRecieved+"/"+totalContests+" "+contestUrl).green);
-                            callback(contestProblems);
-                        }
-                    });
-                })(window.$);
+    var contestId = contestUrl.split("/");
+    contestId = contestId[contestId.length-1];
+    request('http://codeforces.com/api/contest.standings?contestId='+contestId+'&from=1&count=1', function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            var problems = JSON.parse(response.body).result.problems;
+            for(var i = 0;i < problems.length;i++) {
+                var problem = {};
+                problem['code'] = problems[i].index;
+                problem['link'] = contestUrl+"/problem/"+problems[i].index;
+                problem['name'] = problems[i].name;
+                problem['tags'] = problems[i].tags;
+                problem['solved'] = false;
+                contestProblems.push(problem);
             }
-            else{
-                console.log(contestUrl.red, errors);
-                if(getContestProblems.retries[contestUrl] > getContestProblems.maxRetries) {
-                    console.log("Max retries exceeded".red);
-                    callback(contestProblems);
-                } else {
-                    console.log("Retrying...");
-                    getContestProblems(contestUrl, callback);
-                }
+            totalContestsRecieved++;
+            console.log((totalContestsRecieved+"/"+totalContests+" "+contestUrl).green);
+            callback(contest, contestProblems);
+        } else {
+            console.log(contestUrl.red, error, response.statusCode, body);
+            if(getContestProblems.retries[contestUrl] > getContestProblems.maxRetries) {
+                console.log("Max retries exceeded".red);
+                callback(contest, contestProblems);
+            } else {
+                console.log("Retrying...");
+                setTimeout(function(){
+                    getContestProblems(contest, callback);
+                }, 200);
             }
         }
-    );
+    });
 }
 getContestProblems.retries = {};
-getContestProblems.maxRetries = 3;
+getContestProblems.maxRetries = 1000;
 var getContestMetaData = function ($, node) {
     var contest = {};
     contest['name'] = getTextNodesIn($, node)[0].textContent.trim();
     contest['round'] = '';
-    for(var j=contest['name'].indexOf('#')+1;j<contest['name'].length && contest['name'][j]!=' ';j++) {
+    for(var j=contest['name'].indexOf('#')+1;j<contest['name'].length && contest['name'][j]!=' ';j++)
         contest['round'] = contest['round'] + contest['name'][j];
-    }
     contest['div'] = (contest['name'].indexOf('Div. 2') >= 0)?(2):(1);
     contest['link'] = "http://www.codeforces.com" + node.find("a").attr('href');
     contest['code'] = node.find("a").attr('href').split("/")[2];
     contest['problems'] = [];
-    // console.log(contest);
     return contest;
 }
 var getContestsOnPage = function (page, callback) {
@@ -98,35 +89,36 @@ var getContestsOnPage = function (page, callback) {
                 (function($) {
                     var allContests = $(".datatable table:last() tbody tr").find("td:first()");
                     var nContests = 0;
+                    var allContests2 = Array();
                     for(var i=0;i<allContests.length;i++){
                         var contest = getContestMetaData($, $(allContests[i]));
                         if(parseInt(contest['code']) > lastContest){
                             nContests++;
                             newLastContest = Math.max(newLastContest, parseInt(contest['code']));
+                            allContests2.push(allContests[i]);
                         }
                     }
                     console.log( ("Page "+page+" contests = "+nContests).blue );
                     var sentContests = nContests;
                     totalContests += sentContests;
-                    if(nContests == 0){
+                    if(nContests == 0) {
                         console.log( ("Page "+page+" contests = "+ nContests).green );
                         callback(contests);
                     }
-                    $.each(allContests, function() {
-                        var contest = getContestMetaData($, $(this));
-                        if(parseInt(contest['code']) <= lastContest)
-                            return;
-                        getContestProblems(contest['link'], function(data) {
-                            contest['problems'] = data;
-                            contests = contests.concat(contest);
-                            // console.log(contests);
-                            nContests--;
-                            if(!nContests) {
-                                console.log( ("Page "+page+" contests = "+ sentContests).green );
-                                callback(contests);
-                            }
-                        });
-                    });
+                    var i = 0;
+                    var handleContestOutput = function(contest, data) {
+                        contest['problems'] = data;
+                        contests = contests.concat(contest);
+                        nContests--;
+                        if(!nContests) {
+                            console.log( ("Page "+page+" contests = "+ sentContests).green );
+                            callback(contests);
+                        } else {
+                            i++;
+                            getContestProblems(getContestMetaData($, $(allContests2[i])), handleContestOutput);
+                        }
+                    };
+                    getContestProblems(getContestMetaData($, $(allContests2[i])), handleContestOutput);
                 })(window.$);
             }
             else{
@@ -136,14 +128,16 @@ var getContestsOnPage = function (page, callback) {
                     callback(contests);
                 } else {
                     console.log("Retrying...");
-                    getContestsOnPage(page, callback);
+                    setTimeout(function(){
+                        getContestsOnPage(page, callback);
+                    }, 200);
                 }
             }
         }
-    )
+    );
 }
 getContestsOnPage.retries = {};
-getContestsOnPage.maxRetries = 2;
+getContestsOnPage.maxRetries = 100;
 var writeToFile = function (fileName, newData) {
     fs.readFile(fileName, function(err,data){
         if(err){

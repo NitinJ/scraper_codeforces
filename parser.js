@@ -7,10 +7,11 @@ var jade = require('jade');
 
 'use strict';
 // Globals
-var PAGES = [1, 2, 3, 4, 5];
+var PAGES = [1,2,3,4,5];
 var PATH = "";
-var OUTPUT_FILE = PATH + "data/Z_2codeforces_data_" + PAGES.length + ".json";
+var OUTPUT_FILE = PATH + "data/2codeforces_data_" + PAGES.length + ".json";
 var JSONFILE = OUTPUT_FILE;
+var DIFFERENCIAL_FILE = PATH + "data/2codeforces_data_"+ PAGES.length +"_lastcontest.json";
 
 var getTextNodesIn = function ($, el) {
     return $(el).find(":not(iframe)").addBack().contents().filter(function () {
@@ -104,7 +105,6 @@ var getContestsOnPage = function (page, callback) {
                         }
                     };
                     getContestProblems(getContestMetaData($, $(allContests[i])), handleContestOutput);
-
                 })(window.$);
             }
             else{
